@@ -43,6 +43,16 @@ type FluidState = {
 
 let idCounter = 0;
 
+function vibrate(pattern: number | number[]) {
+  if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
+    try {
+      navigator.vibrate(pattern);
+    } catch {
+      // ignore — some browsers reject if not in a user gesture
+    }
+  }
+}
+
 export const useFluidStore = create<FluidState>((set, getState) => ({
   metaballs: [],
   displacement: [],
@@ -60,6 +70,7 @@ export const useFluidStore = create<FluidState>((set, getState) => ({
       radius: 0.06 + Math.random() * 0.02,
     };
     set({ metaballs: [...getState().metaballs, ball] });
+    vibrate(12);
   },
 
   updateMetaballs: (balls) => set({ metaballs: balls }),
@@ -80,10 +91,13 @@ export const useFluidStore = create<FluidState>((set, getState) => ({
     set({
       metaballs: balls.filter((m) => m.id !== a && m.id !== b).concat(merged),
     });
+    vibrate([18, 30, 24]);
   },
 
-  triggerClearWave: () =>
-    set({ clearWave: getState().clearWave + 1 }),
+  triggerClearWave: () => {
+    set({ clearWave: getState().clearWave + 1 });
+    vibrate([8, 30, 8, 30, 14]);
+  },
 
   setDisplacement: (samples) => set({ displacement: samples }),
 

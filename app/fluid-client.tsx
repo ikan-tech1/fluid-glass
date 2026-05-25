@@ -125,22 +125,28 @@ export default function FluidClient() {
         </header>
 
         <footer className="absolute bottom-0 left-0 right-0 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-          <GlassPanel
-            className="mx-auto max-w-md pointer-events-auto"
-            corners
-            refractIndex={2}
+          <motion.div
+            animate={{ opacity: started ? 0 : 1, y: started ? 8 : 0 }}
+            transition={{ duration: 0.6, delay: started ? 1.4 : 0 }}
+            style={{ pointerEvents: started ? "none" : "auto" }}
           >
-            <div className="flex flex-wrap gap-2 justify-center mb-2">
-              <Tag active>Drag · Swirl</Tag>
-              <Tag>Double-tap · Drop</Tag>
-              <Tag>2-finger flick · Clear</Tag>
-            </div>
-            <DisplacementOverlay sampleIndex={2}>
-              <p className="font-mono text-[9px] text-center text-white/40 tracking-[0.2em] uppercase">
-                Touch the canvas to begin
-              </p>
-            </DisplacementOverlay>
-          </GlassPanel>
+            <GlassPanel
+              className="mx-auto max-w-md pointer-events-auto"
+              corners
+              refractIndex={2}
+            >
+              <div className="flex flex-wrap gap-2 justify-center mb-2">
+                <Tag active>Drag · Swirl</Tag>
+                <Tag>Double-tap · Drop</Tag>
+                <Tag>2-finger flick · Clear</Tag>
+              </div>
+              <DisplacementOverlay sampleIndex={2}>
+                <p className="font-mono text-[9px] text-center text-white/40 tracking-[0.2em] uppercase">
+                  Touch the canvas to begin
+                </p>
+              </DisplacementOverlay>
+            </GlassPanel>
+          </motion.div>
         </footer>
       </div>
 
