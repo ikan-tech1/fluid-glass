@@ -8,6 +8,7 @@ import DisplacementOverlay, {
   DisplacementText,
 } from "@/components/displacement-overlay";
 import { GlassPanel, Readout, StatusBar, Tag } from "@/components/glass-panel";
+import GlassRefractionFilters from "@/components/refraction-filter";
 import { useFluidGestures, useMultiTouchClearWave } from "@/lib/input/fluid-gestures";
 import { useFluidStore } from "@/lib/store/fluid";
 import { usePerformance } from "@/lib/store/performance";
@@ -83,11 +84,16 @@ export default function FluidClient() {
     >
       <div className="absolute inset-0 bg-midnight-gradient" />
       <FluidCanvasDynamic className="absolute inset-0 z-0" />
+      <GlassRefractionFilters />
 
       <div className="absolute inset-0 z-10 pointer-events-none p-safe">
         <header className="flex items-start justify-between p-4 pt-[max(1rem,env(safe-area-inset-top))]">
-          <GlassPanel className="pointer-events-auto min-w-[180px]" title="Fluid Glass">
-            <DisplacementOverlay sampleIndex={0}>
+          <GlassPanel
+            className="pointer-events-auto min-w-[180px]"
+            title="Fluid Glass"
+            refractIndex={1}
+          >
+            <DisplacementOverlay sampleIndex={1}>
               <DisplacementText>
                 <p className="font-mono text-lg tracking-[0.15em] uppercase gradient-iridescent">
                   Sensory
@@ -99,7 +105,11 @@ export default function FluidClient() {
             </p>
           </GlassPanel>
 
-          <GlassPanel className="pointer-events-auto w-[140px]" title="Status">
+          <GlassPanel
+            className="pointer-events-auto w-[140px]"
+            title="Status"
+            refractIndex={0}
+          >
             <Readout label="FPS" value={stats.fps} />
             <Readout label="Tier" value={preset.toUpperCase()} className="mt-1.5" />
             <Readout
@@ -115,13 +125,17 @@ export default function FluidClient() {
         </header>
 
         <footer className="absolute bottom-0 left-0 right-0 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-          <GlassPanel className="mx-auto max-w-md pointer-events-auto" corners>
+          <GlassPanel
+            className="mx-auto max-w-md pointer-events-auto"
+            corners
+            refractIndex={2}
+          >
             <div className="flex flex-wrap gap-2 justify-center mb-2">
               <Tag active>Drag · Swirl</Tag>
               <Tag>Double-tap · Drop</Tag>
               <Tag>2-finger flick · Clear</Tag>
             </div>
-            <DisplacementOverlay sampleIndex={1}>
+            <DisplacementOverlay sampleIndex={2}>
               <p className="font-mono text-[9px] text-center text-white/40 tracking-[0.2em] uppercase">
                 Touch the canvas to begin
               </p>

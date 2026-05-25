@@ -11,6 +11,7 @@ export type PerformanceProfile = {
   pressureIterations: number;
   postPassCount: number;
   backdropBlur: boolean;
+  svgRefraction: boolean;
 };
 
 const PROFILES: Record<PerformancePreset, PerformanceProfile> = {
@@ -21,6 +22,7 @@ const PROFILES: Record<PerformancePreset, PerformanceProfile> = {
     pressureIterations: 10,
     postPassCount: 1,
     backdropBlur: false,
+    svgRefraction: false,
   },
   medium: {
     preset: "medium",
@@ -29,6 +31,7 @@ const PROFILES: Record<PerformancePreset, PerformanceProfile> = {
     pressureIterations: 15,
     postPassCount: 2,
     backdropBlur: true,
+    svgRefraction: true,
   },
   high: {
     preset: "high",
@@ -37,6 +40,7 @@ const PROFILES: Record<PerformancePreset, PerformanceProfile> = {
     pressureIterations: 20,
     postPassCount: 3,
     backdropBlur: true,
+    svgRefraction: true,
   },
   ultra: {
     preset: "ultra",
@@ -45,17 +49,22 @@ const PROFILES: Record<PerformancePreset, PerformanceProfile> = {
     pressureIterations: 25,
     postPassCount: 4,
     backdropBlur: true,
+    svgRefraction: true,
   },
 };
 
 function detectPreset(): PerformancePreset {
   if (typeof window === "undefined") return "high";
-  const mobile =
-    /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(
-      navigator.userAgent,
-    ) || window.matchMedia("(max-width: 768px)").matches;
-  if (mobile) return "low";
+  const ua = navigator.userAgent;
+  const isMobile =
+    /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua) ||
+    window.matchMedia("(max-width: 768px)").matches;
   const cores = navigator.hardwareConcurrency ?? 4;
+  const mem = (navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 4;
+  const lowEnd = cores <= 4 && mem <= 3;
+  if (isMobile) {
+    return lowEnd ? "low" : "medium";
+  }
   if (cores >= 8) return "ultra";
   if (cores >= 4) return "high";
   return "medium";

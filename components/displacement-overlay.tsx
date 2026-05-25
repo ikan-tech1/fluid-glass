@@ -2,7 +2,6 @@
 
 import { useFluidStore } from "@/lib/store/fluid";
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
 import type { ReactNode } from "react";
 
 type DisplacementOverlayProps = {
@@ -19,28 +18,20 @@ export default function DisplacementOverlay({
   const samples = useFluidStore((s) => s.displacement);
   const sample = samples[sampleIndex] ?? { dx: 0, dy: 0 };
 
-  const offsetX = sample.dx * 12;
-  const offsetY = sample.dy * 12;
-  const chroma = Math.min(3, Math.hypot(sample.dx, sample.dy) * 8);
+  const energy = Math.hypot(sample.dx, sample.dy);
+  const chroma = Math.min(2.2, energy * 0.55);
 
   return (
-    <motion.div
+    <div
       className={cn("relative inline-block", className)}
-      animate={{
-        x: offsetX,
-        y: offsetY,
-      }}
-      transition={{ type: "spring", stiffness: 400, damping: 35, mass: 0.5 }}
       style={{
-        textShadow: `
-          ${chroma}px 0 rgba(255, 60, 180, 0.55),
-          ${-chroma}px 0 rgba(60, 220, 255, 0.55),
-          0 0 20px rgba(255, 255, 255, 0.08)
-        `,
+        textShadow: chroma > 0.05
+          ? `${chroma.toFixed(2)}px 0 rgba(255, 60, 180, 0.5), ${(-chroma).toFixed(2)}px 0 rgba(60, 220, 255, 0.5), 0 0 18px rgba(255, 255, 255, 0.07)`
+          : "0 0 14px rgba(255, 255, 255, 0.05)",
       }}
     >
       {children}
-    </motion.div>
+    </div>
   );
 }
 
@@ -51,18 +42,5 @@ export function DisplacementText({
   children: ReactNode;
   className?: string;
 }) {
-  const velocityMag = useFluidStore((s) => s.stats.velocityMag);
-  const warp = Math.min(velocityMag * 0.8, 6);
-
-  return (
-    <span
-      className={cn("inline-block transition-transform duration-75", className)}
-      style={{
-        transform: `skewX(${warp * 0.15}deg) scale(${1 + warp * 0.008})`,
-        filter: `blur(${Math.max(0, warp * 0.05)}px)`,
-      }}
-    >
-      {children}
-    </span>
-  );
+  return <span className={cn("inline-block", className)}>{children}</span>;
 }

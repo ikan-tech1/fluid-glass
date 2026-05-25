@@ -14,6 +14,14 @@ import {
 import { useFluidStore } from "@/lib/store/fluid";
 import { getPerformanceProfile, usePerformance } from "@/lib/store/performance";
 
+const PANEL_SAMPLE_POSITIONS: ReadonlyArray<readonly [number, number]> = [
+  [0.82, 0.12],
+  [0.18, 0.12],
+  [0.5, 0.88],
+];
+const PANEL_FALLOFF = 0.35;
+const PANEL_DECAY = 0.86;
+
 function FluidScene() {
   const simRef = useRef<FluidSimulator | null>(null);
   const displayMesh = useRef<THREE.Mesh>(null);
@@ -34,6 +42,10 @@ function FluidScene() {
   const lastClearWave = useRef(0);
   const fpsAccum = useRef({ frames: 0, time: 0 });
   const velEstimate = useRef({ x: 0, y: 0, mag: 0 });
+  const panelEnergy = useRef<{ dx: number; dy: number }[]>(
+    PANEL_SAMPLE_POSITIONS.map(() => ({ dx: 0, dy: 0 })),
+  );
+  const chromaOffset = useMemo(() => new THREE.Vector2(0.0025, 0.0025), []);
 
   useEffect(() => {
     simRef.current = new FluidSimulator(
@@ -76,6 +88,24 @@ function FluidScene() {
         y: s.dy * 40,
         mag: Math.hypot(s.dx, s.dy) * 40,
       };
+      const sx = s.x;
+      const sy = s.y;
+      const dx = s.dx * 40;
+      const dy = s.dy * 40;
+      for (let i = 0; i < PANEL_SAMPLE_POSITIONS.length; i++) {
+        const [px, py] = PANEL_SAMPLE_POSITIONS[i];
+        const d = Math.hypot(sx - px, sy - py);
+        if (d < PANEL_FALLOFF) {
+          const w = 1 - d / PANEL_FALLOFF;
+          panelEnergy.current[i].dx += dx * w;
+          panelEnergy.current[i].dy += dy * w;
+        }
+      }
+    }
+
+    for (let i = 0; i < panelEnergy.current.length; i++) {
+      panelEnergy.current[i].dx *= PANEL_DECAY;
+      panelEnergy.current[i].dy *= PANEL_DECAY;
     }
 
     sim.step(Math.min(delta, 0.033), state.clock.elapsedTime);
@@ -112,11 +142,21 @@ function FluidScene() {
       metaballMesh.current.material = metaballMat.current;
     }
 
-    setDisplacement([
-      { x: 0.5, y: 0.12, dx: velEstimate.current.x, dy: velEstimate.current.y },
-      { x: 0.15, y: 0.5, dx: velEstimate.current.x * 0.6, dy: velEstimate.current.y * 0.6 },
-      { x: 0.85, y: 0.75, dx: velEstimate.current.x * 0.4, dy: velEstimate.current.y * 0.4 },
-    ]);
+    setDisplacement(
+      PANEL_SAMPLE_POSITIONS.map(([px, py], i) => ({
+        x: px,
+        y: py,
+        dx: panelEnergy.current[i].dx,
+        dy: panelEnergy.current[i].dy,
+      })),
+    );
+
+    const t = Math.min(velEstimate.current.mag / 4, 1);
+    const s = 0.0025 + t * 0.006;
+    chromaOffset.set(s, s);
+    if (typeof document !== "undefined") {
+      document.documentElement.style.setProperty("--fluid-energy", t.toFixed(3));
+    }
 
     fpsAccum.current.frames += 1;
     fpsAccum.current.time += delta;
@@ -163,7 +203,7 @@ function FluidScene() {
             blendFunction={BlendFunction.ADD}
           />
           <ChromaticAberration
-            offset={new THREE.Vector2(0.0008, 0.0008)}
+            offset={chromaOffset}
             blendFunction={BlendFunction.NORMAL}
             radialModulation={profile.postPassCount >= 3}
             modulationOffset={0.15}

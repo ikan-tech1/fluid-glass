@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import type { ReactNode } from "react";
 import { getPerformanceProfile, usePerformance } from "@/lib/store/performance";
+import { REFRACT_FILTER_PREFIX } from "@/components/refraction-filter";
 
 export function GlassPanel({
   className,
@@ -11,15 +12,21 @@ export function GlassPanel({
   title,
   right,
   corners = true,
+  refractIndex,
 }: {
   className?: string;
   children: ReactNode;
   title?: string;
   right?: ReactNode;
   corners?: boolean;
+  refractIndex?: number;
 }) {
   const preset = usePerformance((s) => s.preset);
   const profile = getPerformanceProfile(preset);
+  const refractFilter =
+    refractIndex !== undefined && profile.svgRefraction !== false
+      ? `url(#${REFRACT_FILTER_PREFIX}${refractIndex})`
+      : undefined;
 
   return (
     <motion.div
@@ -39,17 +46,21 @@ export function GlassPanel({
           <span className="corner-bl" />
         </>
       )}
-      {(title || right) && (
-        <div className="flex items-center justify-between mb-2 px-0.5">
-          {title && (
-            <h3 className="font-mono text-[10px] tracking-[0.25em] uppercase text-white/45">
-              {title}
-            </h3>
-          )}
-          {right}
-        </div>
-      )}
-      {children}
+      <div
+        style={refractFilter ? { filter: refractFilter, willChange: "filter" } : undefined}
+      >
+        {(title || right) && (
+          <div className="flex items-center justify-between mb-2 px-0.5">
+            {title && (
+              <h3 className="font-mono text-[10px] tracking-[0.25em] uppercase text-white/45">
+                {title}
+              </h3>
+            )}
+            {right}
+          </div>
+        )}
+        {children}
+      </div>
     </motion.div>
   );
 }
