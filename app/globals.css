@@ -21,6 +21,7 @@
 
 html,
 body {
+  min-height: 100dvh;
   background: var(--midnight-bottom);
   color: var(--foreground);
   font-family: var(--font-mono);
